@@ -7,7 +7,7 @@ import {
   AppBar,
   Toolbar,
 } from '@mui/material';
-import { Add as AddIcon, Link as LinkIcon } from '@mui/icons-material';
+import { Add as AddIcon } from '@mui/icons-material';
 import './App.css';
 
 // Types
@@ -85,7 +85,15 @@ function App() {
               mr: 2,
             }}
           >
-            <LinkIcon sx={{ fontSize: 28 }} />
+            <img 
+              src="/logo.png" 
+              alt="URL Manager Logo" 
+              style={{ 
+                width: 28, 
+                height: 28,
+                objectFit: 'contain'
+              }} 
+            />
           </Box>
           <Typography
             variant="h5"
