@@ -31,10 +31,10 @@ export const StatusFilter: React.FC<StatusFilterProps> = ({
   onSelectStatus,
 }) => {
   return (
-    <Paper sx={{ p: 2.5, mb: 3, borderRadius: 2 }}>
+    <Paper sx={{ p: 1.5, mb: 2, borderRadius: 2, boxShadow: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
         <ReadingIcon sx={{ mr: 1, color: 'primary.main' }} />
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
           状態でフィルター
         </Typography>
       </Box>
@@ -48,7 +48,7 @@ export const StatusFilter: React.FC<StatusFilterProps> = ({
             mb: 1,
           }}
         />
-        {(['未読', '読書中', '完読'] as ReadingStatus[]).map((status) => (
+        {(['未読', '読書中'] as ReadingStatus[]).map((status) => (
           <Chip
             key={status}
             icon={getStatusIcon(status)}

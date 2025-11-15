@@ -17,6 +17,8 @@ import {
   BookmarkBorder as UnreadIcon,
   AutoStories as ReadingIcon,
   CheckCircle as CompletedIcon,
+  Favorite as FavoriteIcon,
+  FavoriteBorder as FavoriteBorderIcon,
 } from '@mui/icons-material';
 import { URLItem, ReadingStatus } from '../types';
 import { getCardGradient, getColorFromTag, getStatusColor } from '../utils/colors';
@@ -28,6 +30,8 @@ interface URLCardProps {
   onDelete: (id: string) => void;
   onOpenUrl: (url: string) => void;
   onChangeStatus: (id: string, status: ReadingStatus) => void;
+  onCompleteClick?: (urlItem: URLItem) => void; // 完読ボタンクリック時のコールバック
+  onToggleFavorite?: (id: string) => void; // お気に入りトグル
 }
 
 const getStatusIcon = (status: ReadingStatus) => {
@@ -47,6 +51,8 @@ export const URLCard: React.FC<URLCardProps> = ({
   onDelete,
   onOpenUrl,
   onChangeStatus,
+  onCompleteClick,
+  onToggleFavorite,
 }) => {
   return (
     <Card
@@ -71,23 +77,53 @@ export const URLCard: React.FC<URLCardProps> = ({
         }}
       />
       <CardContent sx={{ flexGrow: 1, p: 3, position: 'relative' }}>
-        <IconButton
-          size="small"
-          onClick={() => onEdit(urlItem)}
+        <Box
           sx={{
             position: 'absolute',
             top: 12,
             right: 12,
-            bgcolor: 'rgba(255,255,255,0.9)',
-            boxShadow: 1,
-            '&:hover': {
-              bgcolor: 'primary.main',
-              color: 'white',
-            },
+            display: 'flex',
+            gap: 0.5,
           }}
         >
-          <EditIcon sx={{ fontSize: 18 }} />
-        </IconButton>
+          {onToggleFavorite && (
+            <IconButton
+              size="small"
+              onClick={() => onToggleFavorite(urlItem.id)}
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.9)',
+                boxShadow: 1,
+                '&:hover': {
+                  bgcolor: urlItem.isFavorite ? 'error.light' : 'error.lighter',
+                  color: 'white',
+                },
+                ...(urlItem.isFavorite && {
+                  color: 'error.main',
+                }),
+              }}
+            >
+              {urlItem.isFavorite ? (
+                <FavoriteIcon sx={{ fontSize: 18 }} />
+              ) : (
+                <FavoriteBorderIcon sx={{ fontSize: 18 }} />
+              )}
+            </IconButton>
+          )}
+          <IconButton
+            size="small"
+            onClick={() => onEdit(urlItem)}
+            sx={{
+              bgcolor: 'rgba(255,255,255,0.9)',
+              boxShadow: 1,
+              '&:hover': {
+                bgcolor: 'primary.main',
+                color: 'white',
+              },
+            }}
+          >
+            <EditIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        </Box>
         <Typography
           variant="h5"
           component="h2"
@@ -97,7 +133,7 @@ export const URLCard: React.FC<URLCardProps> = ({
             color: 'text.primary',
             mb: 2,
             lineHeight: 1.3,
-            pr: 5,
+            pr: onToggleFavorite ? 10 : 5,
           }}
         >
           {urlItem.title}
@@ -113,6 +149,24 @@ export const URLCard: React.FC<URLCardProps> = ({
           >
             {urlItem.description}
           </Typography>
+        )}
+        {urlItem.status === '完読' && urlItem.completedMemo && (
+          <Box
+            sx={{
+              mb: 2,
+              p: 1.5,
+              bgcolor: 'rgba(76, 175, 80, 0.1)',
+              borderRadius: 2,
+              borderLeft: '3px solid #4caf50',
+            }}
+          >
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 0.5 }}>
+              完読メモ
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.primary', whiteSpace: 'pre-wrap' }}>
+              {urlItem.completedMemo}
+            </Typography>
+          </Box>
         )}
         {urlItem.tags.length > 0 && (
           <Box sx={{ mb: 2 }}>
@@ -135,7 +189,7 @@ export const URLCard: React.FC<URLCardProps> = ({
             ))}
           </Box>
         )}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, flexWrap: 'wrap' }}>
           <Chip
             icon={getStatusIcon(urlItem.status)}
             label={urlItem.status}
@@ -147,8 +201,13 @@ export const URLCard: React.FC<URLCardProps> = ({
             }}
           />
           <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            {formatDate(urlItem.createdAt)}
+            作成: {formatDate(urlItem.createdAt)}
           </Typography>
+          {urlItem.status === '完読' && urlItem.completedAt && (
+            <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 600 }}>
+              完了: {formatDate(urlItem.completedAt)}
+            </Typography>
+          )}
         </Box>
       </CardContent>
       <CardActions
@@ -194,7 +253,7 @@ export const URLCard: React.FC<URLCardProps> = ({
         </Box>
 
         <Stack direction="row" spacing={0.5} sx={{ width: '100%' }}>
-          {(['未読', '読書中', '完読'] as ReadingStatus[]).map((status) => (
+          {(['未読', '読書中'] as ReadingStatus[]).map((status) => (
             <Button
               key={status}
               size="small"
@@ -227,6 +286,42 @@ export const URLCard: React.FC<URLCardProps> = ({
               {status}
             </Button>
           ))}
+          <Button
+            size="small"
+            variant={urlItem.status === '完読' ? 'contained' : 'outlined'}
+            onClick={() => {
+              if (onCompleteClick && urlItem.status !== '完読') {
+                onCompleteClick(urlItem);
+              } else {
+                onChangeStatus(urlItem.id, '完読');
+              }
+            }}
+            startIcon={getStatusIcon('完読')}
+            sx={{
+              flex: 1,
+              fontSize: '0.7rem',
+              py: 0.5,
+              minWidth: 0,
+              textTransform: 'none',
+              ...(urlItem.status === '完読' && {
+                bgcolor: getStatusColor('完読'),
+                '&:hover': {
+                  bgcolor: getStatusColor('完読'),
+                  opacity: 0.9,
+                },
+              }),
+              ...(urlItem.status !== '完読' && {
+                borderColor: getStatusColor('完読'),
+                color: getStatusColor('完読'),
+                '&:hover': {
+                  borderColor: getStatusColor('完読'),
+                  bgcolor: `${getStatusColor('完読')}15`,
+                },
+              }),
+            }}
+          >
+            完読
+          </Button>
         </Stack>
       </CardActions>
     </Card>

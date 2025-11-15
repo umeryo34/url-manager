@@ -55,8 +55,32 @@ export function useUrlManager() {
     setUrls(urls.filter(url => url.id !== id));
   };
 
-  const changeStatus = (id: string, newStatus: ReadingStatus) => {
-    setUrls(urls.map(url => (url.id === id ? { ...url, status: newStatus } : url)));
+  const changeStatus = (id: string, newStatus: ReadingStatus, memo?: string, completedAt?: string) => {
+    setUrls(urls.map(url => {
+      if (url.id === id) {
+        const updated = { ...url, status: newStatus };
+        if (newStatus === '完読') {
+          updated.completedAt = completedAt || new Date().toISOString();
+          if (memo !== undefined) {
+            updated.completedMemo = memo;
+          }
+        } else {
+          // 完読以外の状態に戻す場合は、メモと完了日時をクリア
+          if (url.status === '完読') {
+            updated.completedAt = undefined;
+            updated.completedMemo = undefined;
+          }
+        }
+        return updated;
+      }
+      return url;
+    }));
+  };
+
+  const toggleFavorite = (id: string) => {
+    setUrls(urls.map(url =>
+      url.id === id ? { ...url, isFavorite: !url.isFavorite } : url
+    ));
   };
 
   const deleteTag = (tagToDelete: string) => {
@@ -88,6 +112,7 @@ export function useUrlManager() {
     deleteUrl,
     changeStatus,
     deleteTag,
+    toggleFavorite,
   };
 }
 
