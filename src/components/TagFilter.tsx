@@ -20,16 +20,16 @@ export const TagFilter: React.FC<TagFilterProps> = ({
   if (allTags.length === 0) return null;
 
   return (
-    <Paper sx={{ p: 2.5, mb: 3, borderRadius: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+    <Paper sx={{ p: 1.5, mb: 2, borderRadius: 2, boxShadow: 1 }}>
+      <Box sx={{ mb: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
           <TagIcon sx={{ mr: 1, color: 'primary.main' }} />
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
             タグでフィルター
           </Typography>
         </Box>
-        <Typography variant="caption" color="text.secondary">
-          クリックでフィルター / ×ボタンで削除
+        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', ml: 4 }}>
+          クリックでフィルター / ×で削除
         </Typography>
       </Box>
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
