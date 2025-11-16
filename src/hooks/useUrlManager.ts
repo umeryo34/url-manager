@@ -31,6 +31,8 @@ export function useUrlManager() {
       id: Date.now().toString(),
       status: '未読',
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      clickCount: 0,
     };
     setUrls([urlItem, ...urls]);
 
@@ -42,7 +44,8 @@ export function useUrlManager() {
   };
 
   const updateUrl = (updatedUrl: URLItem) => {
-    setUrls(urls.map(url => (url.id === updatedUrl.id ? updatedUrl : url)));
+    const now = new Date().toISOString();
+    setUrls(urls.map(url => (url.id === updatedUrl.id ? { ...updatedUrl, updatedAt: now } : url)));
 
     // 新しいタグをallTagsに追加
     const newTags = updatedUrl.tags.filter(tag => !allTags.includes(tag));
@@ -58,7 +61,7 @@ export function useUrlManager() {
   const changeStatus = (id: string, newStatus: ReadingStatus, memo?: string, completedAt?: string) => {
     setUrls(urls.map(url => {
       if (url.id === id) {
-        const updated = { ...url, status: newStatus };
+        const updated: URLItem = { ...url, status: newStatus, updatedAt: new Date().toISOString() };
         if (newStatus === '完読') {
           updated.completedAt = completedAt || new Date().toISOString();
           if (memo !== undefined) {
@@ -79,7 +82,7 @@ export function useUrlManager() {
 
   const toggleFavorite = (id: string) => {
     setUrls(urls.map(url =>
-      url.id === id ? { ...url, isFavorite: !url.isFavorite } : url
+      url.id === id ? { ...url, isFavorite: !url.isFavorite, updatedAt: new Date().toISOString() } : url
     ));
   };
 
@@ -96,12 +99,17 @@ export function useUrlManager() {
         urls.map(url => ({
           ...url,
           tags: url.tags.filter(tag => tag !== tagToDelete),
+          updatedAt: url.tags.includes(tagToDelete) ? new Date().toISOString() : url.updatedAt,
         }))
       );
     }
 
     // allTagsからタグを削除
     setAllTags(allTags.filter(tag => tag !== tagToDelete));
+  };
+
+  const incrementClickCount = (id: string) => {
+    setUrls(urls.map(url => url.id === id ? { ...url, clickCount: (url.clickCount || 0) + 1, updatedAt: new Date().toISOString() } : url));
   };
 
   return {
@@ -113,6 +121,7 @@ export function useUrlManager() {
     changeStatus,
     deleteTag,
     toggleFavorite,
+    incrementClickCount,
   };
 }
 

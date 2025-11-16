@@ -28,7 +28,7 @@ interface URLCardProps {
   urlItem: URLItem;
   onEdit: (urlItem: URLItem) => void;
   onDelete: (id: string) => void;
-  onOpenUrl: (url: string) => void;
+  onOpenUrl: (item: URLItem) => void;
   onChangeStatus: (id: string, status: ReadingStatus) => void;
   onCompleteClick?: (urlItem: URLItem) => void; // 完読ボタンクリック時のコールバック
   onToggleFavorite?: (id: string) => void; // お気に入りトグル
@@ -203,6 +203,9 @@ export const URLCard: React.FC<URLCardProps> = ({
           <Typography variant="caption" sx={{ color: 'text.disabled' }}>
             作成: {formatDate(urlItem.createdAt)}
           </Typography>
+          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+            開いた: {(urlItem.clickCount ?? 0)}回
+          </Typography>
           {urlItem.status === '完読' && urlItem.completedAt && (
             <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 600 }}>
               完了: {formatDate(urlItem.completedAt)}
@@ -224,7 +227,7 @@ export const URLCard: React.FC<URLCardProps> = ({
             variant="contained"
             size="small"
             startIcon={<OpenInNewIcon />}
-            onClick={() => onOpenUrl(urlItem.url)}
+            onClick={() => onOpenUrl(urlItem)}
             sx={{
               flex: 1,
               background: getCardGradient(urlItem),

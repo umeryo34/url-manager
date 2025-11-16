@@ -14,10 +14,10 @@ export const FavoriteFilter: React.FC<FavoriteFilterProps> = ({
   onToggle,
 }) => {
   return (
-    <Paper sx={{ p: 1.5, mb: 2, borderRadius: 2, boxShadow: 1 }}>
+    <Paper sx={{ p: 1.5, pr: 1, mb: 2, borderRadius: 2, boxShadow: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
         <FavoriteIcon sx={{ mr: 1, color: 'error.main' }} />
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>
           お気に入りでフィルター
         </Typography>
       </Box>

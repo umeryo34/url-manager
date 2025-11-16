@@ -11,6 +11,8 @@ import {
   Tab,
 } from '@mui/material';
 import { Add as AddIcon, CheckCircle as CompletedIcon } from '@mui/icons-material';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import './App.css';
 
 // Types
@@ -30,7 +32,7 @@ import { CompleteDialog } from './components/CompleteDialog';
 import { EmptyState } from './components/EmptyState';
 
 function App() {
-  const { urls, allTags, addUrl, updateUrl, deleteUrl, changeStatus, deleteTag, toggleFavorite } = useUrlManager();
+  const { urls, allTags, addUrl, updateUrl, deleteUrl, changeStatus, deleteTag, toggleFavorite, incrementClickCount } = useUrlManager();
 
   const [openDialog, setOpenDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -41,6 +43,7 @@ function App() {
   const [selectedFilterStatus, setSelectedFilterStatus] = useState<ReadingStatus | null>(null);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
+  const [sortOption, setSortOption] = useState<string>('created_desc');
 
   // アクティブなURL（未読・読書中）と完読したURLを分離
   const activeUrls = urls.filter(url => url.status !== '完読');
@@ -53,6 +56,27 @@ function App() {
     const matchesStatus = !selectedFilterStatus || url.status === selectedFilterStatus;
     const matchesFavorite = !showOnlyFavorites || url.isFavorite === true;
     return matchesTags && matchesStatus && matchesFavorite;
+  });
+
+  // ソート処理
+  const sortedUrls = [...filteredUrls].sort((a, b) => {
+    const [key, order] = sortOption.split('_') as [string, 'asc' | 'desc'];
+    const dir = order === 'asc' ? 1 : -1;
+    const getTime = (s?: string) => (s ? new Date(s).getTime() : 0);
+    switch (key) {
+      case 'created':
+        return (getTime(a.createdAt) - getTime(b.createdAt)) * dir;
+      case 'updated':
+        return (getTime(a.updatedAt) - getTime(b.updatedAt)) * dir;
+      case 'completed':
+        return (getTime(a.completedAt) - getTime(b.completedAt)) * dir;
+      case 'title':
+        return a.title.localeCompare(b.title, 'ja') * dir;
+      case 'clicks':
+        return (((a.clickCount ?? 0) - (b.clickCount ?? 0)) * dir);
+      default:
+        return 0;
+    }
   });
 
   const handleToggleTag = (tag: string) => {
@@ -73,8 +97,9 @@ function App() {
     setOpenEditDialog(true);
   };
 
-  const handleOpenUrl = (url: string) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
+  const handleOpenUrl = (item: URLItem) => {
+    window.open(item.url, '_blank', 'noopener,noreferrer');
+    incrementClickCount(item.id);
   };
 
   const handleCompleteClick = (urlItem: URLItem) => {
@@ -133,18 +158,41 @@ function App() {
           >
             URL Manager
           </Typography>
+          <Select
+            size="small"
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value as string)}
+            sx={{
+              minWidth: 220,
+              bgcolor: 'rgba(255,255,255,0.9)',
+              borderRadius: 1,
+              mr: 1,
+            }}
+          >
+            <MenuItem value="created_desc">作成日が新しい順</MenuItem>
+            <MenuItem value="created_asc">作成日が古い順</MenuItem>
+            <MenuItem value="updated_desc">更新日が新しい順</MenuItem>
+            <MenuItem value="updated_asc">更新日が古い順</MenuItem>
+            <MenuItem value="completed_desc" disabled={activeTab !== 'completed'}>完了日が新しい順</MenuItem>
+            <MenuItem value="completed_asc" disabled={activeTab !== 'completed'}>完了日が古い順</MenuItem>
+            <MenuItem value="title_asc">タイトル A → Z</MenuItem>
+            <MenuItem value="title_desc">タイトル Z → A</MenuItem>
+            <MenuItem value="clicks_desc">クリック数 多い順</MenuItem>
+            <MenuItem value="clicks_asc">クリック数 少ない順</MenuItem>
+          </Select>
           <Button
             color="inherit"
             startIcon={<AddIcon />}
             onClick={() => setOpenDialog(true)}
             sx={{
-              bgcolor: 'rgba(255,255,255,0.2)',
-              borderRadius: 2,
+              bgcolor: 'rgba(255,255,255,0.9)',
+              borderRadius: 1,
+              color: 'text.primary',
               px: 2.5,
               py: 1,
               fontWeight: 600,
               '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.3)',
+                bgcolor: 'rgba(255,255,255,0.95)',
               },
             }}
           >
@@ -201,7 +249,7 @@ function App() {
         {/* メインコンテンツ - URLリスト */}
         <Container maxWidth="lg" sx={{ flex: 1, p: 0 }}>
           {/* タブ */}
-          <Paper sx={{ mb: 3, borderRadius: 2 }}>
+          <Paper sx={{ mb: 2, borderRadius: 2 }}>
             <Tabs
               value={activeTab}
               onChange={(_, newValue) => {
@@ -209,6 +257,7 @@ function App() {
                 setSelectedFilterTags([]);
                 setSelectedFilterStatus(null);
                 setShowOnlyFavorites(false);
+                setSortOption(newValue === 'completed' ? 'completed_desc' : 'created_desc');
               }}
               sx={{
                 '& .MuiTab-root': {
@@ -233,6 +282,7 @@ function App() {
               />
             </Tabs>
           </Paper>
+          
 
           {activeTab === 'active' && urls.length === 0 ? (
             <EmptyState type="no-urls" onAction={() => setOpenDialog(true)} />
@@ -257,7 +307,7 @@ function App() {
                 gap: 3,
               }}
             >
-              {filteredUrls.map(urlItem => (
+              {sortedUrls.map(urlItem => (
                 <URLCard
                   key={urlItem.id}
                   urlItem={urlItem}
