@@ -10,9 +10,11 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { Add as AddIcon, CheckCircle as CompletedIcon } from '@mui/icons-material';
+import { Add as AddIcon, CheckCircle as CompletedIcon, Search as SearchIcon } from '@mui/icons-material';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
 import './App.css';
 
 // Types
@@ -44,6 +46,7 @@ function App() {
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
   const [sortOption, setSortOption] = useState<string>('created_desc');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // アクティブなURL（未読・読書中）と完読したURLを分離
   const activeUrls = urls.filter(url => url.status !== '完読');
@@ -55,7 +58,15 @@ function App() {
       selectedFilterTags.length === 0 || selectedFilterTags.every(tag => url.tags.includes(tag));
     const matchesStatus = !selectedFilterStatus || url.status === selectedFilterStatus;
     const matchesFavorite = !showOnlyFavorites || url.isFavorite === true;
-    return matchesTags && matchesStatus && matchesFavorite;
+    
+    // 検索クエリでフィルタリング
+    const matchesSearch = !searchQuery || 
+      url.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      url.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (url.description && url.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      url.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return matchesTags && matchesStatus && matchesFavorite && matchesSearch;
   });
 
   // ソート処理
@@ -158,6 +169,40 @@ function App() {
           >
             URL Manager
           </Typography>
+          <TextField
+            size="small"
+            placeholder="検索..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{
+              minWidth: 200,
+              bgcolor: 'rgba(255,255,255,0.9)',
+              borderRadius: 1,
+              mr: 1,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: 'transparent',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'rgba(255,255,255,0.5)',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'rgba(255,255,255,0.8)',
+                },
+              },
+              '& .MuiInputBase-input': {
+                color: 'text.primary',
+                py: 1,
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                </InputAdornment>
+              ),
+            }}
+          />
           <Select
             size="small"
             value={sortOption}
@@ -257,6 +302,7 @@ function App() {
                 setSelectedFilterTags([]);
                 setSelectedFilterStatus(null);
                 setShowOnlyFavorites(false);
+                setSearchQuery('');
                 setSortOption(newValue === 'completed' ? 'completed_desc' : 'created_desc');
               }}
               sx={{
