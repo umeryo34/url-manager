@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { URLItem, ReadingStatus } from '../types';
 import { useLocalStorage } from './useLocalStorage';
 

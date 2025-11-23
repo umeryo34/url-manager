@@ -339,6 +339,7 @@ function App() {
                 setSelectedFilterTags([]);
                 setSelectedFilterStatus(null);
                 setShowOnlyFavorites(false);
+                setSearchQuery('');
               }}
             />
           ) : (
